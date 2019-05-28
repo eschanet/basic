@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 
 import os, sys, argparse, glob
 
@@ -16,14 +16,25 @@ def list_treenames(file):
     trees_list = []
     for key in tf.GetListOfKeys():
         trees_list.append(key.GetName())
-    # print trees_list
     tf.Close()
     return trees_list
+
+parser = argparse.ArgumentParser(description='Skim ntuples')
+parser.add_argument('analysis', help='Which analysis?')
+parser.add_argument('-types', help='Data, bkg and signal?', nargs='+')
+parser.add_argument('-wildcard', help='Wildcarding for a specific process', default='')
+parser.add_argument('--debug', help='Increase me some verbosity dude', action='store_true')
+parser.add_argument('--includeLHE', help='Include LHE weights', action='store_true')
+parser.add_argument('--nominal', help='Only nominal trees', action='store_true')
+parser.add_argument('--vjets', help='', action='store_true')
+args = parser.parse_args()
+
+print args
 
 skim_systs = True
 
 # set up the JobHandler
-jh = JobHandler(name="styx-skim", run_max=20)
+jh = JobHandler(work_dir="/project/etp2/eschanet/collect", name="skimCode", run_max=20)
 
 # define the run script content
 skim_script = """
@@ -68,24 +79,65 @@ branches = []
 to_add = ["genWeight", "eventWeight", "leptonWeight", "jvtWeight", "bTagWeight", "pileupWeight"]
 for b in to_add:
     branches.append(b)
-# general variables
-branches.append("trigMatch_metTrig")
-branches.append("trigWeight_metTrig")
-branches.append("FS")
-branches.append("DatasetNumber")
-branches.append("RandomRunNumber")
-branches.append("met")
-branches.append("mt")
-branches.append("mct2")
-branches.append("mlb1")
-branches.append("mbb")
-branches.append("nJet30")
-branches.append("nBJet30_MV2c10")
 
-# lepton variables
-branches.append("nLep_signal")
-branches.append("nLep_base")
+if args.analysis == "strong1L":
+    #strong1L
+    vars = [
+        "trigMatch_metTrig",
+        "trigWeight_metTrig",
+        "FS",
+        "DatasetNumber",
+        "RandomRunNumber",
+        "RunNumber",
+        "EventNumber",
+        "GenHt",
+        "met",
+        "mt",
+        "nJet30",
+        "nBJet30_MV2c10",
+        "meffInc30",
+        "LepAplanarity",
+        "nLep_signal",
+        "nLep_base",
+        "lep1Pt",
+        "AnalysisType",
+    ]
+    selection =  "met>250 && nJet30>=2 && nLep_signal==1 && nLep_base==1" #strong 1L
+elif args.analysis == "1Lbb":
+    #1Lbb
+    vars = [
+        "trigMatch_metTrig",
+        "trigWeight_metTrig",
+        "FS",
+        "DatasetNumber",
+        "RandomRunNumber",
+        "RunNumber",
+        "EventNumber",
+        "GenHt",
+        "met",
+        "bJet2Pt",
+        "mt",
+        "mct2",
+        "mlb1",
+        "mbb",
+        "nJet30",
+        "nBJet30_MV2c10",
+        "nLep_signal",
+        "nLep_base",
+        "lep1Pt",
+        "AnalysisType",
+    ]
+    selection =  "met>220 && nJet30<=3 && nJet30>=2 && nBJet30_MV2c10==2 && nLep_signal==1 && nLep_base==1" #1Lbb
+else:
+    raise ValueError('I do not know what analysis to consider.')
 
+if args.vjets:
+    branches.append("nTruthJet25")
+    branches.append("nTruthJet30")
+
+
+for b in vars:
+    branches.append(b)
 
 weight_sys = [
 'leptonWeight_EL_EFF_ID_TOTAL_1NPCOR_PLUS_UNCOR__1down',
@@ -132,30 +184,150 @@ weight_sys = [
 'genWeightDown',
 ]
 
+lhe_weights = [
+"LHE3Weight_MUR0.5_MUF0.5_PDF261000",
+"LHE3Weight_MUR0.5_MUF1_PDF261000",
+"LHE3Weight_MUR1_MUF0.5_PDF261000",
+"LHE3Weight_MUR1_MUF1_PDF13000",
+"LHE3Weight_MUR1_MUF1_PDF25300",
+"LHE3Weight_MUR1_MUF1_PDF261000",
+"LHE3Weight_MUR1_MUF1_PDF261001",
+"LHE3Weight_MUR1_MUF1_PDF261002",
+"LHE3Weight_MUR1_MUF1_PDF261003",
+"LHE3Weight_MUR1_MUF1_PDF261004",
+"LHE3Weight_MUR1_MUF1_PDF261005",
+"LHE3Weight_MUR1_MUF1_PDF261006",
+"LHE3Weight_MUR1_MUF1_PDF261007",
+"LHE3Weight_MUR1_MUF1_PDF261008",
+"LHE3Weight_MUR1_MUF1_PDF261009",
+"LHE3Weight_MUR1_MUF1_PDF261010",
+"LHE3Weight_MUR1_MUF1_PDF261011",
+"LHE3Weight_MUR1_MUF1_PDF261012",
+"LHE3Weight_MUR1_MUF1_PDF261013",
+"LHE3Weight_MUR1_MUF1_PDF261014",
+"LHE3Weight_MUR1_MUF1_PDF261015",
+"LHE3Weight_MUR1_MUF1_PDF261016",
+"LHE3Weight_MUR1_MUF1_PDF261017",
+"LHE3Weight_MUR1_MUF1_PDF261018",
+"LHE3Weight_MUR1_MUF1_PDF261019",
+"LHE3Weight_MUR1_MUF1_PDF261020",
+"LHE3Weight_MUR1_MUF1_PDF261021",
+"LHE3Weight_MUR1_MUF1_PDF261022",
+"LHE3Weight_MUR1_MUF1_PDF261023",
+"LHE3Weight_MUR1_MUF1_PDF261024",
+"LHE3Weight_MUR1_MUF1_PDF261025",
+"LHE3Weight_MUR1_MUF1_PDF261026",
+"LHE3Weight_MUR1_MUF1_PDF261027",
+"LHE3Weight_MUR1_MUF1_PDF261028",
+"LHE3Weight_MUR1_MUF1_PDF261029",
+"LHE3Weight_MUR1_MUF1_PDF261030",
+"LHE3Weight_MUR1_MUF1_PDF261031",
+"LHE3Weight_MUR1_MUF1_PDF261032",
+"LHE3Weight_MUR1_MUF1_PDF261033",
+"LHE3Weight_MUR1_MUF1_PDF261034",
+"LHE3Weight_MUR1_MUF1_PDF261035",
+"LHE3Weight_MUR1_MUF1_PDF261036",
+"LHE3Weight_MUR1_MUF1_PDF261037",
+"LHE3Weight_MUR1_MUF1_PDF261038",
+"LHE3Weight_MUR1_MUF1_PDF261039",
+"LHE3Weight_MUR1_MUF1_PDF261040",
+"LHE3Weight_MUR1_MUF1_PDF261041",
+"LHE3Weight_MUR1_MUF1_PDF261042",
+"LHE3Weight_MUR1_MUF1_PDF261043",
+"LHE3Weight_MUR1_MUF1_PDF261044",
+"LHE3Weight_MUR1_MUF1_PDF261045",
+"LHE3Weight_MUR1_MUF1_PDF261046",
+"LHE3Weight_MUR1_MUF1_PDF261047",
+"LHE3Weight_MUR1_MUF1_PDF261048",
+"LHE3Weight_MUR1_MUF1_PDF261049",
+"LHE3Weight_MUR1_MUF1_PDF261050",
+"LHE3Weight_MUR1_MUF1_PDF261051",
+"LHE3Weight_MUR1_MUF1_PDF261052",
+"LHE3Weight_MUR1_MUF1_PDF261053",
+"LHE3Weight_MUR1_MUF1_PDF261054",
+"LHE3Weight_MUR1_MUF1_PDF261055",
+"LHE3Weight_MUR1_MUF1_PDF261056",
+"LHE3Weight_MUR1_MUF1_PDF261057",
+"LHE3Weight_MUR1_MUF1_PDF261058",
+"LHE3Weight_MUR1_MUF1_PDF261059",
+"LHE3Weight_MUR1_MUF1_PDF261060",
+"LHE3Weight_MUR1_MUF1_PDF261061",
+"LHE3Weight_MUR1_MUF1_PDF261062",
+"LHE3Weight_MUR1_MUF1_PDF261063",
+"LHE3Weight_MUR1_MUF1_PDF261064",
+"LHE3Weight_MUR1_MUF1_PDF261065",
+"LHE3Weight_MUR1_MUF1_PDF261066",
+"LHE3Weight_MUR1_MUF1_PDF261067",
+"LHE3Weight_MUR1_MUF1_PDF261068",
+"LHE3Weight_MUR1_MUF1_PDF261069",
+"LHE3Weight_MUR1_MUF1_PDF261070",
+"LHE3Weight_MUR1_MUF1_PDF261071",
+"LHE3Weight_MUR1_MUF1_PDF261072",
+"LHE3Weight_MUR1_MUF1_PDF261073",
+"LHE3Weight_MUR1_MUF1_PDF261074",
+"LHE3Weight_MUR1_MUF1_PDF261075",
+"LHE3Weight_MUR1_MUF1_PDF261076",
+"LHE3Weight_MUR1_MUF1_PDF261077",
+"LHE3Weight_MUR1_MUF1_PDF261078",
+"LHE3Weight_MUR1_MUF1_PDF261079",
+"LHE3Weight_MUR1_MUF1_PDF261080",
+"LHE3Weight_MUR1_MUF1_PDF261081",
+"LHE3Weight_MUR1_MUF1_PDF261082",
+"LHE3Weight_MUR1_MUF1_PDF261083",
+"LHE3Weight_MUR1_MUF1_PDF261084",
+"LHE3Weight_MUR1_MUF1_PDF261085",
+"LHE3Weight_MUR1_MUF1_PDF261086",
+"LHE3Weight_MUR1_MUF1_PDF261087",
+"LHE3Weight_MUR1_MUF1_PDF261088",
+"LHE3Weight_MUR1_MUF1_PDF261089",
+"LHE3Weight_MUR1_MUF1_PDF261090",
+"LHE3Weight_MUR1_MUF1_PDF261091",
+"LHE3Weight_MUR1_MUF1_PDF261092",
+"LHE3Weight_MUR1_MUF1_PDF261093",
+"LHE3Weight_MUR1_MUF1_PDF261094",
+"LHE3Weight_MUR1_MUF1_PDF261095",
+"LHE3Weight_MUR1_MUF1_PDF261096",
+"LHE3Weight_MUR1_MUF1_PDF261097",
+"LHE3Weight_MUR1_MUF1_PDF261098",
+"LHE3Weight_MUR1_MUF1_PDF261099",
+"LHE3Weight_MUR1_MUF1_PDF261100",
+"LHE3Weight_MUR1_MUF1_PDF269000",
+"LHE3Weight_MUR1_MUF1_PDF270000",
+"LHE3Weight_MUR1_MUF2_PDF261000",
+"LHE3Weight_MUR2_MUF1_PDF261000",
+"LHE3Weight_MUR2_MUF2_PDF261000",
+]
+
 if skim_systs:
     for sys in weight_sys:
         branches.append(sys)
 
-# define selection of skimming
-##############################
-# selection = met_trig + stau_veto + jpsi_veto + lep_author16_veto + " && met_Et > 100 && mll<60 && nJet20 > 0 && jetPt[0]>100"
-selection =  "met>220 && nJet30<=3 && nJet30>=2 && nBJet30_MV2c10==2 && nLep_signal==1 && nLep_base==1"
+base_output_path = "/project/etp2/eschanet/trees/v2-0/skims/"
+base_output_path = os.path.join(base_output_path, args.analysis)
+base_ntuple_path = "/project/etp2/eschanet/trees/v2-0/merged/"
 
-# name of folder that contains the skimed files, e.g. "skim"
-skim_folder = "skimmed"
-output_path = "/project/etp3/eschanet/trees/v2-0/skimmed/"
+if not args.types:
+    types = ["bkg","data","signal"]
+else:
+    types = args.types
+for type in types:
+    output_path = os.path.join(base_output_path, type)
+    ntuple_path = os.path.join(base_ntuple_path, type)
+    print ntuple_path
 
-# backgrounds
-# for type in ["Signal", "BG", "Data"]:
-for type in ["bkg", "data"]:
-# for type in ["Signal"]:
-    if type == "bkg":
-        ntuple_path = "/project/etp3/eschanet/trees/v2-0/all/"
-    elif type == "data":
-        ntuple_path = "/project/etp4/eschanet/ntuples/common/full_run_2/v2-0/"
+    if type == 'signal':
+        if args.analysis == "strong1L":
+            wildcard = "*oneStep"
+        elif args.analysis == "1Lbb":
+            wildcard = "C1N2_Wh"
+    else:
+        wildcard = args.wildcard
 
-    for f in glob.glob(ntuple_path + "*.root"):
-        # print f
+    nominal=''
+    if args.nominal:
+        nominal = 'NoSys'
+    for f in sorted(glob.glob(os.path.join(ntuple_path,wildcard+"*"+nominal+".root"))):
+
         name = os.path.splitext(os.path.basename(f))[0]
 
         print("preparing skimming job(s) for {}".format(name))
@@ -177,6 +349,11 @@ for type in ["bkg", "data"]:
         del available_trees
 
         print("  -- found {} tree(s) to skim".format(len(treenames)))
+
+        #only for wjets, add lhe weights branches
+        if "wjets" in f and "NoSys" in f:
+            if args.includeLHE:
+                branchnames = branchnames + " ," + " ,".join(['"{}"'.format(b) for b in lhe_weights])
 
         # if there are more than 50 trees, split into several jobs and merge later
         if len(treenames) > 50:
