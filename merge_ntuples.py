@@ -20,7 +20,7 @@ def list_treenames(file):
     return trees_list
 
 # set up the JobHandler
-jh = JobHandler(work_dir="/project/etp2/eschanet/collect", name="hadd", run_max=20)
+jh = JobHandler(work_dir="/project/etp/eschanet/collect", name="hadd", run_max=20)
 
 
 merge_script = """
@@ -46,29 +46,29 @@ output_path = "/project/etp2/eschanet/trees/v2-0/merged/bkg"
 processes = ["ttbar"]
 
 
-systematics = [ "NoSys_noLHE"]
+# systematics = [ "NoSys_noLHE"]
 
-# systematics = [ "NoSys_noLHE",
-#                 "EG_",
-#                 "JET_BJES_",
-#                 "JET_Comb_",
-#                 "JET_EffectiveNP_Detector",
-#                 "JET_EffectiveNP_Mixed",
-#                 "JET_EffectiveNP_Modelling",
-#                 "JET_EffectiveNP_Statistical",
-#                 "JET_EtaIntercalibration_",
-#                 "JET_Flavor_",
-#                 "JET_JER_DataVsMC",
-#                 "JET_JER_EffectiveNP",
-#                 "JET_JvtEfficiency_",
-#                 "JET_MassRes_",
-#                 "JET_Pileup_",
-#                 "JET_PunchThrough_",
-#                 "JET_Rtrk_",
-#                 "JET_SingleParticle_",
-#                 "JET_RelativeNonClosure_",
-#                 "MUON_",
-#                 "MET_" ]
+systematics = [ "NoSys_noLHE",
+                "EG_",
+                "JET_BJES_",
+                "JET_Comb_",
+                "JET_EffectiveNP_Detector",
+                "JET_EffectiveNP_Mixed",
+                "JET_EffectiveNP_Modelling",
+                "JET_EffectiveNP_Statistical",
+                "JET_EtaIntercalibration_",
+                "JET_Flavor_",
+                "JET_JER_DataVsMC",
+                "JET_JER_EffectiveNP",
+                "JET_JvtEfficiency_",
+                "JET_MassRes_",
+                "JET_Pileup_",
+                "JET_PunchThrough_",
+                "JET_Rtrk_",
+                "JET_SingleParticle_",
+                "JET_RelativeNonClosure_",
+                "MUON_",
+                "MET_" ]
 
 for process in processes:
     print "Starting with process {}".format(process)

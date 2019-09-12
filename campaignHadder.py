@@ -11,7 +11,7 @@ from machete import pythonHelpers as ph
 
 from slurmy import JobHandler, Slurm
 
-jh = JobHandler(work_dir="/project/etp3/eschanet/collect", name="campaignHadder", run_max=20)
+jh = JobHandler(work_dir="/project/etp/eschanet/collect", name="campaignHadder", run_max=20)
 
 merge_script = """
 echo "running on $(hostname)"
@@ -30,7 +30,9 @@ echo "removing files that have been merged to save diskspace"
 
 parser = argparse.ArgumentParser(description='Hadd files across MC campaigns')
 parser.add_argument('input', help='Text file with samples to hadd.', nargs='+')
-parser.add_argument('-naming-scheme', help='Naming scheme of signal samples. Use regex.', default='C1N2_Wh_hbb_\d*p\d_\d*p\d')
+# parser.add_argument('-naming-scheme', help='Naming scheme of signal samples. Use regex.', default='C1N2_Wh_hbb_\d*p\d_\d*p\d')
+# parser.add_argument('-naming-scheme', help='Naming scheme of signal samples. Use regex.', default='leptoquark_[azA-Z0-9]*_[azA-Z0-9]*_[azA-Z0-9]*_M\d*')
+parser.add_argument('-naming-scheme', help='Naming scheme of signal samples. Use regex.', default='[a-zA-Z0-9]*_LQ[a-zA-Z]{1}_[a-zA-Z]*_[a-zA-Z]*_\dp\d_[a-zA-Z]*_\dp\d_[a-zA-Z]*_\dp\d_M\d{3,4}')
 # parser.add_argument('-naming-scheme', help='Naming scheme of signal samples. Use regex.', default='[A-Za-z]{2}_onestepCC_\d*_\d*_\d*')
 parser.add_argument('-production', help='Production tag.', default='v2-0-6')
 # parser.add_argument('-output-file', help='Name of hadded output tree.', default='allTrees_v1_20_signal_wh.root')
@@ -40,7 +42,7 @@ args = parser.parse_args()
 
 pattern = re.compile(args.naming_scheme)
 
-base_path = "/project/etp2/eschanet/OneLepAnalysis-rel21-latest/SusySkim1LInclusive_submodules/source/SusySkim1LInclusive/data/samples/mc16e/"
+base_path = "/project/etp2/eschanet/SusySkim1LInclusive_submodules/source/SusySkim1LInclusive/data/samples/mc16e/"
 full_paths = [os.path.join(base_path, path) for path in args.input]
 
 output_path = "/project/etp2/eschanet/trees/v2-0/merged/signal/"
@@ -50,7 +52,6 @@ for f in full_paths:
         for line in i:
             if ph.is_comment(line):
                 continue
-            # print line
             match = re.search(pattern,line)
             if match:
                 point = match.group()
@@ -60,10 +61,13 @@ for f in full_paths:
                 if "onestep" in point.lower():
                     #onestep points have different formatting at tree- and AOD-level
                     point = point.replace("onestepCC", "oneStep")
-                seacher = "{}*merged_processed*.root".format(point)
-                files_mc16a = glob.glob("/project/etp4/eschanet/ntuples/common/mc16a/{}/merged/{}".format(args.production,seacher))
-                files_mc16d = glob.glob("/project/etp4/eschanet/ntuples/common/mc16d/{}/merged/{}".format(args.production,seacher))
-                files_mc16e = glob.glob("/project/etp4/eschanet/ntuples/common/mc16e/{}/merged/{}".format(args.production,seacher))
+                elif "LQ" in point:
+                    point = "leptoquark_" + point.replace('ld_0p3_beta_0p5_hnd_1p0_','') + "_"
+                searcher = "{}*merged_processed*.root".format(point)
+                print(searcher)
+                files_mc16a = glob.glob("/project/etp4/eschanet/ntuples/common/mc16a/{}/merged/{}".format(args.production,searcher))
+                files_mc16d = glob.glob("/project/etp4/eschanet/ntuples/common/mc16d/{}/merged/{}".format(args.production,searcher))
+                files_mc16e = glob.glob("/project/etp4/eschanet/ntuples/common/mc16e/{}/merged/{}".format(args.production,searcher))
 
                 if len(files_mc16a)==0 or len(files_mc16d)==0 or len(files_mc16e)==0:
                     print "mc16a: %i"%len(files_mc16a)

@@ -34,7 +34,7 @@ print args
 skim_systs = True
 
 # set up the JobHandler
-jh = JobHandler(work_dir="/project/etp2/eschanet/collect", name="skimCode", run_max=20)
+jh = JobHandler(work_dir="/project/etp/eschanet/collect", name="skimCode", run_max=20)
 
 # define the run script content
 skim_script = """
@@ -311,17 +311,21 @@ if not args.types:
 else:
     types = args.types
 for type in types:
-    output_path = os.path.join(base_output_path, type)
-    ntuple_path = os.path.join(base_ntuple_path, type)
-    print ntuple_path
 
     if type == 'signal':
         if args.analysis == "strong1L":
-            wildcard = "*oneStep"
+            wildcard = "*oneStep*"
         elif args.analysis == "1Lbb":
-            wildcard = "C1N2_Wh"
+            wildcard = "C1N2_Wh_hbb_9*"
+    elif type == 'leptoquark':
+        wildcard = "leptoquark*"
+        type = 'signal'
     else:
         wildcard = args.wildcard
+
+    output_path = os.path.join(base_output_path, type)
+    ntuple_path = os.path.join(base_ntuple_path, type)
+    print ntuple_path
 
     nominal=''
     if args.nominal:
