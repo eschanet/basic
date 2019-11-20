@@ -25,13 +25,12 @@ parser.add_argument('-types', help='Data, bkg and signal?', nargs='+')
 parser.add_argument('-wildcard', help='Wildcarding for a specific process', default='')
 parser.add_argument('--debug', help='Increase me some verbosity dude', action='store_true')
 parser.add_argument('--includeLHE', help='Include LHE weights', action='store_true')
+parser.add_argument('--excludeSystematics', help='Exclude systematics', action='store_true')
 parser.add_argument('--nominal', help='Only nominal trees', action='store_true')
 parser.add_argument('--vjets', help='', action='store_true')
 args = parser.parse_args()
 
 print args
-
-skim_systs = True
 
 # set up the JobHandler
 jh = JobHandler(work_dir="/project/etp/eschanet/collect", name="skimCode", run_max=20)
@@ -72,6 +71,7 @@ rm  {inputfiles}
 
 #NtupleSkimmer.py --inputfile {inputfile} --outputfile {outputfile} --treenames {treenames} --branches {branches} --selection {selection}
 
+
 # branches to write out
 #######################
 branches = []
@@ -92,6 +92,7 @@ if args.analysis == "strong1L":
         "EventNumber",
         "GenHt",
         "met",
+        "met_Phi"
         "mt",
         "nJet30",
         "nBJet30_MV2c10",
@@ -298,11 +299,15 @@ lhe_weights = [
 "LHE3Weight_MUR2_MUF2_PDF261000",
 ]
 
-if skim_systs:
+if not args.excludeSystematics:
     for sys in weight_sys:
         branches.append(sys)
 
-base_output_path = "/project/etp2/eschanet/trees/v2-0/skims/"
+
+if args.nominal:
+    base_output_path = "/project/etp2/eschanet/trees/v2-0/skims_NoSys/"
+else:
+    base_output_path = "/project/etp2/eschanet/trees/v2-0/skims/"
 base_output_path = os.path.join(base_output_path, args.analysis)
 base_ntuple_path = "/project/etp2/eschanet/trees/v2-0/merged/"
 
@@ -314,9 +319,9 @@ for type in types:
 
     if type == 'signal':
         if args.analysis == "strong1L":
-            wildcard = "*oneStep*"
+            wildcard = "*GG_oneStep*"
         elif args.analysis == "1Lbb":
-            wildcard = "C1N2_Wh_hbb_9*"
+            wildcard = "C1N2_Wh_hbb*"
     elif type == 'leptoquark':
         wildcard = "leptoquark*"
         type = 'signal'
@@ -330,7 +335,7 @@ for type in types:
     nominal=''
     if args.nominal:
         nominal = 'NoSys'
-    for f in sorted(glob.glob(os.path.join(ntuple_path,wildcard+"*"+nominal+".root"))):
+    for f in sorted(glob.glob(os.path.join(ntuple_path,wildcard+"*"+nominal+"*.root"))):
 
         name = os.path.splitext(os.path.basename(f))[0]
 

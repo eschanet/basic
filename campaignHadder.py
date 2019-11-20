@@ -32,8 +32,8 @@ parser = argparse.ArgumentParser(description='Hadd files across MC campaigns')
 parser.add_argument('input', help='Text file with samples to hadd.', nargs='+')
 # parser.add_argument('-naming-scheme', help='Naming scheme of signal samples. Use regex.', default='C1N2_Wh_hbb_\d*p\d_\d*p\d')
 # parser.add_argument('-naming-scheme', help='Naming scheme of signal samples. Use regex.', default='leptoquark_[azA-Z0-9]*_[azA-Z0-9]*_[azA-Z0-9]*_M\d*')
-parser.add_argument('-naming-scheme', help='Naming scheme of signal samples. Use regex.', default='[a-zA-Z0-9]*_LQ[a-zA-Z]{1}_[a-zA-Z]*_[a-zA-Z]*_\dp\d_[a-zA-Z]*_\dp\d_[a-zA-Z]*_\dp\d_M\d{3,4}')
-# parser.add_argument('-naming-scheme', help='Naming scheme of signal samples. Use regex.', default='[A-Za-z]{2}_onestepCC_\d*_\d*_\d*')
+# parser.add_argument('-naming-scheme', help='Naming scheme of signal samples. Use regex.', default='[a-zA-Z0-9]*_LQ[a-zA-Z]{1}_[a-zA-Z]*_[a-zA-Z]*_\dp\d_[a-zA-Z]*_\dp\d_[a-zA-Z]*_\dp\d_M\d{3,4}')
+parser.add_argument('-naming-scheme', help='Naming scheme of signal samples. Use regex.', default='[A-Za-z]{2}_onestepCC_\d*_\d*_\d*')
 parser.add_argument('-production', help='Production tag.', default='v2-0-6')
 # parser.add_argument('-output-file', help='Name of hadded output tree.', default='allTrees_v1_20_signal_wh.root')
 #parser.add_argument('-output-file', help='Name of hadded output tree.', default='allTrees_v1_20_signal_onestep.root')
@@ -42,7 +42,7 @@ args = parser.parse_args()
 
 pattern = re.compile(args.naming_scheme)
 
-base_path = "/project/etp2/eschanet/SusySkim1LInclusive_submodules/source/SusySkim1LInclusive/data/samples/mc16e/"
+base_path = "/project/etp2/eschanet/SUSY1L_EventSelection/source/SusySkim1LInclusive/data/samples/mc16e/"
 full_paths = [os.path.join(base_path, path) for path in args.input]
 
 output_path = "/project/etp2/eschanet/trees/v2-0/merged/signal/"
