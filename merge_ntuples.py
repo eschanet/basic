@@ -20,7 +20,7 @@ def list_treenames(file):
     return trees_list
 
 # set up the JobHandler
-jh = JobHandler(work_dir="/project/etp/eschanet/collect", name="hadd", run_max=20)
+jh = JobHandler(work_dir="/project/etp3/eschanet/collect", name="hadd", run_max=50)
 
 
 merge_script = """
@@ -38,37 +38,36 @@ hadd -f {outputfile} {inputfiles}
 #rm  {inputfiles}
 """
 
-tag = "1Lbb_v2-0-6"
+tag = "v2-0-simpleJER"
 
-output_path = "/project/etp2/eschanet/trees/v2-0/merged/bkg"
-# processes = ["ttbar","singletop","wjets","zjets","diboson","multiboson","ttv","tth","vh","ttbar_allhad"]
+output_path = "/project/etp2/eschanet/trees/v2-0-simpleJER/merged/bkg"
+# processes = ["ttbar","singletop","wjets","zjets","diboson","multiboson","ttv","tth","vh"]
 # processes = ["singletop","wjets","zjets","diboson","multiboson","ttv","tth","vh","ttbar_allhad"]
 processes = ["ttbar"]
 
-
-# systematics = [ "NoSys_noLHE"]
-
-systematics = [ "NoSys_noLHE",
-                "EG_",
-                "JET_BJES_",
-                "JET_Comb_",
-                "JET_EffectiveNP_Detector",
-                "JET_EffectiveNP_Mixed",
-                "JET_EffectiveNP_Modelling",
-                "JET_EffectiveNP_Statistical",
-                "JET_EtaIntercalibration_",
-                "JET_Flavor_",
+systematics = [
+                "NoSys",
+                # "EG_",
+                # "JET_BJES_",
+                # "JET_Comb_",
+                # "JET_EffectiveNP_Detector",
+                # "JET_EffectiveNP_Mixed",
+                # "JET_EffectiveNP_Modelling",
+                # "JET_EffectiveNP_Statistical",
+                # "JET_EtaIntercalibration_",
+                # "JET_Flavor_",
                 "JET_JER_DataVsMC",
                 "JET_JER_EffectiveNP",
-                "JET_JvtEfficiency_",
-                "JET_MassRes_",
-                "JET_Pileup_",
-                "JET_PunchThrough_",
-                "JET_Rtrk_",
-                "JET_SingleParticle_",
-                "JET_RelativeNonClosure_",
-                "MUON_",
-                "MET_" ]
+                # "JET_JvtEfficiency_",
+                # "JET_MassRes_",
+                # "JET_Pileup_",
+                # "JET_PunchThrough_",
+                # "JET_Rtrk_",
+                # "JET_SingleParticle_",
+                # "JET_RelativeNonClosure_",
+                # "MUON_",
+                # "MET_",
+                 ]
 
 for process in processes:
     print "Starting with process {}".format(process)
@@ -85,6 +84,6 @@ for process in processes:
                 print f
                 to_merge.append(f)
         ft = FinishedTrigger(outputfile)
-        jh.add_job(name=name+"_hadd", run_script=merge_script.format(outputfile=outputfile,success_func=ft, inputfiles=" ".join(to_merge)))
+        jh.add_job(name=name+"_hadd", run_script=merge_script.format(outputfile=outputfile,finished_func=ft, inputfiles=" ".join(to_merge)))
 
 jh.run_jobs()

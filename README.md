@@ -1,3 +1,3 @@
 # basic
 
-Basic stands for BAsic SkIm Code. This code basically skims.
+Basic stands for BAsic SkIm Code. This code basically skims. But let's be real, it started as skim code but grew organically to handle other tasks as well...

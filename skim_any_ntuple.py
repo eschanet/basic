@@ -20,9 +20,7 @@ def list_treenames(file):
     return trees_list
 
 parser = argparse.ArgumentParser(description='Skim ntuples')
-parser.add_argument('analysis', help='Which analysis?')
-parser.add_argument('-types', help='Data, bkg and signal?', nargs='+')
-parser.add_argument('-wildcard', help='Wildcarding for a specific process', default='')
+parser.add_argument('input', help='Input')
 parser.add_argument('--debug', help='Increase me some verbosity dude', action='store_true')
 parser.add_argument('--includeLHE', help='Include LHE weights', action='store_true')
 parser.add_argument('--excludeSystematics', help='Exclude systematics', action='store_true')
@@ -80,62 +78,28 @@ to_add = ["genWeight", "eventWeight", "leptonWeight", "jvtWeight", "bTagWeight",
 for b in to_add:
     branches.append(b)
 
-if args.analysis == "strong1L":
-    #strong1L
-    vars = [
-        "trigMatch_metTrig",
-        "trigWeight_metTrig",
-        "FS",
-        "DatasetNumber",
-        "RandomRunNumber",
-        "RunNumber",
-        "EventNumber",
-        "GenHt",
-        "met",
-        "met_Phi",
-        "mt",
-        "nJet30",
-        "nBJet30_MV2c10",
-        "meffInc30",
-        "LepAplanarity",
-        "nLep_signal",
-        "nLep_base",
-        "lep1Pt",
-        "AnalysisType",
-    ]
-    selection =  "met>250 && nJet30>=2 && nLep_signal==1 && nLep_base==1" #strong 1L
-elif args.analysis == "1Lbb":
-    #1Lbb
-    vars = [
-        "trigMatch_metTrig",
-        "trigWeight_metTrig",
-        "FS",
-        "DatasetNumber",
-        "RandomRunNumber",
-        "RunNumber",
-        "EventNumber",
-        "GenHt",
-        "met",
-        "bJet2Pt",
-        "mt",
-        "mct2",
-        "mlb1",
-        "mbb",
-        "nJet30",
-        "nBJet30_MV2c10",
-        "nLep_signal",
-        "nLep_base",
-        "lep1Pt",
-        "AnalysisType",
-    ]
-    selection =  "met>220 && nJet30<=3 && nJet30>=2 && nBJet30_MV2c10==2 && nLep_signal==1 && nLep_base==1" #1Lbb
-else:
-    raise ValueError('I do not know what analysis to consider.')
-
-if args.vjets:
-    branches.append("nTruthJet25")
-    branches.append("nTruthJet30")
-
+vars = [
+    "trigMatch_metTrig",
+    "trigWeight_metTrig",
+    "FS",
+    "DatasetNumber",
+    "RandomRunNumber",
+    "RunNumber",
+    "EventNumber",
+    "GenHt",
+    "met",
+    "met_Phi",
+    "mt",
+    "nJet30",
+    "nBJet30_MV2c10",
+    "meffInc30",
+    "LepAplanarity",
+    "nLep_signal",
+    "nLep_base",
+    "lep1Pt",
+    "AnalysisType",
+]
+selection =  "met>250 && nJet30>=2 && nLep_signal==1 && nLep_base==1" #strong 1L
 
 for b in vars:
     branches.append(b)
@@ -303,87 +267,59 @@ if not args.excludeSystematics:
     for sys in weight_sys:
         branches.append(sys)
 
+output_path = "/project/etp4/eschanet/trees/v2-0/skims"
 
-if args.nominal:
-    base_output_path = "/project/etp4/eschanet/ntuples/skims/v2-0-signal_fix"
-else:
-    base_output_path = "/project/etp4/eschanet/ntuples/skims/v2-0-signal_fix"
-# base_output_path = os.path.join(base_output_path, args.analysis)
-base_ntuple_path = "/project/etp4/eschanet/ntuples/preskims/v2-0-signal_fix/"
+nominal='NoSys'
 
-if not args.types:
-    types = ["bkg","data","signal"]
-else:
-    types = args.types
-for type in types:
+f = os.path.join(os.getcwd(),args.input)
 
-    if type == 'signal':
-        if args.analysis == "strong1L":
-            wildcard = "*oneStep*"
-        elif args.analysis == "1Lbb":
-            wildcard = "C1N2_Wh_hbb*"
-    elif type == 'leptoquark':
-        wildcard = "leptoquark*"
-        type = 'signal'
+name = os.path.splitext(os.path.basename(f))[0]
+
+print("preparing skimming job(s) for {}".format(f))
+
+# replace characters that cannot be used in slurm job names
+for badsign in ".-/":
+    name = name.replace(badsign, "")
+
+branchnames = " ,".join(['"{}"'.format(b) for b in branches])
+
+# retrieve list of trees, check if a tree with the same name is contained multiple times in the file
+treenames = []
+available_trees = sorted(list_treenames(f))
+for treename in available_trees:
+    if available_trees.count(treename) == 1:
+        treenames.append(treename)
     else:
-        wildcard = args.wildcard
+        print("more than one tree named {} found in {} --> skipping ...".format(treename, f))
+        continue
+del available_trees
 
-    output_path = os.path.join(base_output_path, type)
-    ntuple_path = os.path.join(base_ntuple_path, type)
-    print ntuple_path
+print("  -- found {} tree(s) to skim".format(len(treenames)))
 
-    nominal=''
-    if args.nominal:
-        nominal = 'NoSys'
+#only for wjets, add lhe weights branches
+if "wjets" in f and "NoSys" in f:
+    if args.includeLHE:
+        branchnames = branchnames + " ," + " ,".join(['"{}"'.format(b) for b in lhe_weights])
 
-
-    for f in sorted(glob.glob(os.path.join(ntuple_path,wildcard+"*"+nominal+"*.root"))):
-        name = os.path.splitext(os.path.basename(f))[0]
-
-        print("preparing skimming job(s) for {}".format(name))
-        # replace characters that cannot be used in slurm job names
-        for badsign in ".-/":
-            name = name.replace(badsign, "")
-
-        branchnames = " ,".join(['"{}"'.format(b) for b in branches])
-
-        # retrieve list of trees, check if a tree with the same name is contained multiple times in the file
-        treenames = []
-        available_trees = sorted(list_treenames(f))
-        for treename in available_trees:
-            if available_trees.count(treename) == 1:
-                treenames.append(treename)
-            else:
-                print("more than one tree named {} found in {} --> skipping ...".format(treename, f))
-                continue
-        del available_trees
-
-        print("  -- found {} tree(s) to skim".format(len(treenames)))
-
-        #only for wjets, add lhe weights branches
-        if "wjets" in f and "NoSys" in f:
-            if args.includeLHE:
-                branchnames = branchnames + " ," + " ,".join(['"{}"'.format(b) for b in lhe_weights])
-
-        # if there are more than 50 trees, split into several jobs and merge later
-        if len(treenames) > 50:
-            i = 1
-            to_merge = []
-            for chunk in chunks(treenames, 25):
-                print("creating chunk #{:02d}".format(i))
-                trees = " ,".join(['"{}"'.format(t) for t in chunk])
-                basename = "{:}_part{:03d}.root".format(os.path.splitext(os.path.basename(f))[0], i)
-                outputfile= os.path.join(output_path, basename)
-                # ft = FinishedTrigger(outputfile)
-                jh.add_job(name=name+"_part{:03d}".format(i), run_script=skim_script.format(inputfile=f, outputfile=outputfile, treenames=trees, branches=branchnames, selection=selection), tags=name+"_skim")
-                to_merge.append(outputfile)
-                i += 1
-            outputfile= os.path.join(output_path, os.path.basename(f))
-            jh.add_job(name=name+"_merge", run_script=merge_script.format(outputfile=outputfile, inputfiles=" ".join(to_merge)), output=outputfile, parent_tags=name+'_skim')
-
-        else:
-            treenames = " ,".join(['"{}"'.format(t) for t in treenames])
-            outputfile= os.path.join(output_path, os.path.basename(f))
-            jh.add_job(name=name, run_script=skim_script.format(inputfile=f, outputfile=outputfile, treenames=treenames, branches=branchnames, output=outputfile, selection=selection))
+# if there are more than 50 trees, split into several jobs and merge later
+if len(treenames) > 50:
+    i = 1
+    to_merge = []
+    for chunk in chunks(treenames, 25):
+        print("creating chunk #{:02d}".format(i))
+        trees = " ,".join(['"{}"'.format(t) for t in chunk])
+        basename = "{:}_part{:03d}.root".format(os.path.splitext(os.path.basename(f))[0], i)
+        outputfile= os.path.join(output_path, basename)
+        jh.add_job(name=name+"_part{:03d}".format(i), run_script=skim_script.format(inputfile=f, outputfile=outputfile, treenames=trees, branches=branchnames, selection=selection), tags=name+"_skim")
+        to_merge.append(outputfile)
+        i += 1
+    outputfile= os.path.join(output_path, os.path.basename(f))
+    ft = FinishedTrigger(outputfile)
+    jh.add_job(name=name+"_merge", run_script=merge_script.format(outputfile=outputfile, inputfiles=" ".join(to_merge)), finished_func=ft, parent_tags=name+'_skim')
+else:
+    treenames = " ,".join(['"{}"'.format(t) for t in treenames])
+    outputfile= os.path.join(output_path, os.path.basename(f))
+    ft = FinishedTrigger(outputfile)
+    jh.add_job(name=name, run_script=skim_script.format(inputfile=f, outputfile=outputfile, treenames=treenames, branches=branchnames, finished_func=ft, selection=selection))
 
 jh.run_jobs()

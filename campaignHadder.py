@@ -11,7 +11,7 @@ from machete import pythonHelpers as ph
 
 from slurmy import JobHandler, Slurm
 
-jh = JobHandler(work_dir="/project/etp/eschanet/collect", name="campaignHadder", run_max=20)
+jh = JobHandler(work_dir="/project/etp/eschanet/collect", name="campaignHadder", run_max=100)
 
 merge_script = """
 echo "running on $(hostname)"
@@ -34,18 +34,19 @@ parser.add_argument('input', help='Text file with samples to hadd.', nargs='+')
 # parser.add_argument('-naming-scheme', help='Naming scheme of signal samples. Use regex.', default='leptoquark_[azA-Z0-9]*_[azA-Z0-9]*_[azA-Z0-9]*_M\d*')
 # parser.add_argument('-naming-scheme', help='Naming scheme of signal samples. Use regex.', default='[a-zA-Z0-9]*_LQ[a-zA-Z]{1}_[a-zA-Z]*_[a-zA-Z]*_\dp\d_[a-zA-Z]*_\dp\d_[a-zA-Z]*_\dp\d_M\d{3,4}')
 parser.add_argument('-naming-scheme', help='Naming scheme of signal samples. Use regex.', default='[A-Za-z]{2}_onestepCC_\d*_\d*_\d*')
-parser.add_argument('-production', help='Production tag.', default='v2-0-6')
+parser.add_argument('-production', help='Production tag.', default='v2-0-signal_fix')
 # parser.add_argument('-output-file', help='Name of hadded output tree.', default='allTrees_v1_20_signal_wh.root')
 #parser.add_argument('-output-file', help='Name of hadded output tree.', default='allTrees_v1_20_signal_onestep.root')
 parser.add_argument('--skip-hadd', help='Skip the actual hadding. Useful for testing purposes', action='store_true')
+parser.add_argument('--ignore-incomplete', help='Hadd even if one campaign is missing', action='store_true')
 args = parser.parse_args()
 
 pattern = re.compile(args.naming_scheme)
 
-base_path = "/project/etp2/eschanet/SUSY1L_EventSelection/source/SusySkim1LInclusive/data/samples/mc16e/"
+base_path = "/project/etp2/eschanet/SUSY1L_EventSelection_21.2.60/SUSY1L_EventSelection/source/SusySkim1LInclusive/data/samples/mc16e/"
 full_paths = [os.path.join(base_path, path) for path in args.input]
 
-output_path = "/project/etp2/eschanet/trees/v2-0/merged/signal/"
+output_path = "/project/etp4/eschanet/ntuples/preskims/v2-0-signal_fix/signal/"
 
 for f in full_paths:
     with open(f,'r') as i:
@@ -75,10 +76,13 @@ for f in full_paths:
                     print "mc16e: %i"%len(files_mc16e)
                     print "WARNING  -  {} is not complete".format(point)
 
-                else:
-                    inputfiles = " ".join(sorted(files_mc16a)) + " " + " ".join(sorted(files_mc16d)) + " " + " ".join(sorted(files_mc16e))
-                    #pprint.pprint(inputfiles)
-                    outputfile = output_path + "{}_merged_processed.root".format(point)
-                    jh.add_job(name=point+"_campaignHadder", run_script=merge_script.format(outputfile=outputfile, inputfiles=inputfiles))
+                    if not args.ignore_incomplete:
+                        continue
+                    print "WARNING  -  Ignoring incomplete!".format(point)
+
+                inputfiles = " ".join(sorted(files_mc16a)) + " " + " ".join(sorted(files_mc16d)) + " " + " ".join(sorted(files_mc16e))
+                #pprint.pprint(inputfiles)
+                outputfile = output_path + "{}_merged_processed.root".format(point)
+                jh.add_job(name=point+"_campaignHadder", run_script=merge_script.format(outputfile=outputfile, inputfiles=inputfiles), output=outputfile)
 
 jh.run_jobs()
