@@ -129,6 +129,57 @@ elif args.analysis == "1Lbb":
         "AnalysisType",
     ]
     selection =  "met>220 && nJet30<=3 && nJet30>=2 && nBJet30_MV2c10==2 && nLep_signal==1 && nLep_base==1" #1Lbb
+elif args.analysis == "EWK1L":
+    #EWK1L
+    vars = [
+        #triggers
+        "trigMatch_metTrig",
+        "trigWeight_metTrig",
+        "trigMatch_singleLepTrig",
+        "trigWeight_singleLepTrig",
+        #some metadata, just in case
+        "FS",
+        "DatasetNumber",
+        "RandomRunNumber",
+        "RunNumber",
+        "EventNumber",
+        "xsec",
+        "GenHt",
+        "GenMET",
+        # combination stuff
+        "nLep_signal",
+        "nLep_combiBase",
+        "nLep_combiBaseHighPt",
+        "nLep_base",
+        # ROI definitions
+        "AnalysisType",
+        "lep1Pt",
+        "lep1Eta",
+        "lep1Phi",
+        "lep2Pt",
+        "lep2Eta",
+        "lep2Phi",
+        "jet1Pt",
+        "jet1Eta",
+        "jet1Phi",
+        "jet2Pt",
+        "jet2Eta",
+        "jet2Phi",
+        "met",
+        "met_Phi",
+        "mct",
+        "mt",
+        "nJet30",
+        "nBJet30_DL1",
+        "nFatjets",
+        "fatjet1Ztagged",
+        "fatjet1Pt",
+        "met_Signif",
+        "fatjet1Wtagged",
+    ]
+    onelepselection = "nJet30<=3 && met>200 && mt>50 && nLep_signal==1 && nLep_base==1"
+    twolepselection = "nJet30<=3 && met>200 && mt>50 && nLep_signal==2 && nLep_base==2 && met_Signif>10"
+    selection =  "(" + onelepselection + ") || (" + twolepselection + ")" #EWK1L
 else:
     raise ValueError('I do not know what analysis to consider.')
 
@@ -141,14 +192,16 @@ for b in vars:
     branches.append(b)
 
 weight_sys = [
+'leptonWeight_EL_CHARGEID_STAT__1down',
+'leptonWeight_EL_CHARGEID_STAT__1up',
+'leptonWeight_EL_EFF_ChargeIDSel_TOTAL_1NPCOR_PLUS_UNCOR__1down',
+'leptonWeight_EL_EFF_ChargeIDSel_TOTAL_1NPCOR_PLUS_UNCOR__1up',
 'leptonWeight_EL_EFF_ID_TOTAL_1NPCOR_PLUS_UNCOR__1down',
 'leptonWeight_EL_EFF_ID_TOTAL_1NPCOR_PLUS_UNCOR__1up',
 'leptonWeight_EL_EFF_Iso_TOTAL_1NPCOR_PLUS_UNCOR__1down',
 'leptonWeight_EL_EFF_Iso_TOTAL_1NPCOR_PLUS_UNCOR__1up',
 'leptonWeight_EL_EFF_Reco_TOTAL_1NPCOR_PLUS_UNCOR__1down',
 'leptonWeight_EL_EFF_Reco_TOTAL_1NPCOR_PLUS_UNCOR__1up',
-'leptonWeight_MUON_EFF_BADMUON_STAT__1down',
-'leptonWeight_MUON_EFF_BADMUON_STAT__1up',
 'leptonWeight_MUON_EFF_BADMUON_SYS__1down',
 'leptonWeight_MUON_EFF_BADMUON_SYS__1up',
 'leptonWeight_MUON_EFF_ISO_STAT__1down',
@@ -305,11 +358,11 @@ if not args.excludeSystematics:
 
 
 if args.nominal:
-    base_output_path = "/project/etp4/eschanet/ntuples/skims/v2-0-signal_fix"
+    base_output_path = "/project/etp4/eschanet/ntuples/skims/prodApril-v2/"
 else:
-    base_output_path = "/project/etp4/eschanet/ntuples/skims/v2-0-signal_fix"
+    base_output_path = "/project/etp4/eschanet/ntuples/skims/prodApril-v2/"
 # base_output_path = os.path.join(base_output_path, args.analysis)
-base_ntuple_path = "/project/etp4/eschanet/ntuples/preskims/v2-0-signal_fix/"
+base_ntuple_path = "/project/etp4/eschanet/ntuples/preskims/prodApril-v2/"
 
 if not args.types:
     types = ["bkg","data","signal"]
@@ -322,6 +375,8 @@ for type in types:
             wildcard = "*oneStep*"
         elif args.analysis == "1Lbb":
             wildcard = "C1N2_Wh_hbb*"
+        elif args.analysis == "EWK1L":
+            wildcard = "C1*"
     elif type == 'leptoquark':
         wildcard = "leptoquark*"
         type = 'signal'
